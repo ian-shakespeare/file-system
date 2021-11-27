@@ -7,11 +7,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-struct SuperBlock {
-    uint64_t magic;
-    uint64_t disk_size;
-    uint64_t inodes;
-};
+#define BLOCK_SIZE 4096
 
 void handleerr(bool b, int handle);
 
