@@ -16,7 +16,6 @@ int main() {
         printf("Successful\n");
     }
     printf("=================================\n");
-
     dumpdisk(handle);
     printf("=================================\n");
     printf("         BEGINNING TEST 1\n");
@@ -35,16 +34,19 @@ int main() {
     handleerr(r >= 0, handle);
     printf("%s\n", buf[0]);*/
 
-    int f1 = createfile(handle, 200, 0);
+    int f1 = createfile(handle, 500, 0);
+    int f2 = createfile(handle, 6000, 0);
+    dumpdisk(handle);
     deletefile(handle, f1);
-    int f2 = createfile(handle, 500, 0);
     dumpdisk(handle);
     deletefile(handle, f2);
+    dumpdisk(handle);
 
     /* CLOSE VIRTUAL DISK */
     syncdisk(handle);
-    printf("Closing Virtual Disk...");
+    printf("=================================\nClosing Virtual Disk...");
     closedisk(handle);
     printf("Successful\n");
+    printf("=================================\n");
     exit(0);
 }
