@@ -22,7 +22,7 @@ int main() {
     printf("         BEGINNING TEST 1\n");
     /* TEST SINGLE BLOCK WRITE AND READ */
     // create and write buf
-    char* buf[BLOCK_SIZE];
+    /*char* buf[BLOCK_SIZE];
     buf[0] = "hello";
     printf("%s\n", buf[0]);
     int r = writeblock(handle, 2, &buf);
@@ -33,12 +33,15 @@ int main() {
     // read block
     r = readblock(handle, 2, &buf);
     handleerr(r >= 0, handle);
-    printf("%s\n", buf[0]);
+    printf("%s\n", buf[0]);*/
 
+    int f1 = createfile(handle, 200, 0);
+    deletefile(handle, f1);
+    createfile(handle, 500, 0);
+    dumpdisk(handle);
 
     /* CLOSE VIRTUAL DISK */
     syncdisk(handle);
-
     printf("Closing Virtual Disk...");
     closedisk(handle);
     printf("Successful\n");

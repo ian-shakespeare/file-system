@@ -121,3 +121,43 @@ void dumpdisk(int handle) {
     printf("# magic: %lx\n# disk size: %ldkb\n# num of inodes: %ld\n", (uint64_t) super[0], ((int64_t) super[1]) / 1024, (int64_t) super[2]);
     printf("#################################\n");
 }
+
+int createfile(int handle, uint64_t sz, uint64_t t) {
+    if (sz < BLOCK_SIZE) {
+        struct inode node;
+        node.size = sz;
+        node.mtime = time(NULL);
+        node.type = t;
+        int i;
+        for (i = 2; i < 512; i++) {
+            if (!testbit(i))
+                break;
+        }
+        setbit(i);
+
+        char* buf[BLOCK_SIZE];
+        readblock(handle, 0, &buf);
+        buf[2]++;
+
+        writeblock(handle, 0, &buf);
+        writeblock(handle, 1, &freeblocks);
+        writeblock(handle, i, &node);
+        syncdisk(handle);
+        return i;
+    }
+    else
+        assert(false);
+        return -1;
+}
+
+void deletefile(int handle, uint64_t blocknum) {
+    clearbit(blocknum);
+
+    char* buf[BLOCK_SIZE];
+    readblock(handle, 0, &buf);
+    buf[2]--;
+
+    writeblock(handle, 0, &buf);
+    writeblock(handle, 1, &freeblocks);
+    syncdisk(handle);
+}

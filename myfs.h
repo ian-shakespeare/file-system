@@ -6,8 +6,16 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <stdio.h>
+#include <time.h>
 
 #define BLOCK_SIZE 4096
+
+struct inode {
+    uint64_t size;
+    uint64_t mtime;
+    uint64_t type;
+    uint64_t blocks[509];
+};
 
 void handleerr(bool b, int handle);
 
@@ -18,3 +26,5 @@ int syncdisk(int handle);
 int closedisk(int handle);
 int formatdisk(int handle);
 void dumpdisk(int handle);
+int createfile(int handle, uint64_t sz, uint64_t t);
+void deletefile(int handle, uint64_t blocknum);
