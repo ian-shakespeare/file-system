@@ -10,6 +10,8 @@
 
 #define BLOCK_SIZE 4096
 
+uint64_t freeblocks[512];
+
 struct inode {
     uint64_t size;
     uint64_t mtime;

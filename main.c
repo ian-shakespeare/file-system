@@ -5,7 +5,7 @@ int main() {
     /* OPEN VIRTUAL DISK */
     printf("Opening Virtual Disk...");
     char* path = "./v.disk";
-    int handle = opendisk(path, BLOCK_SIZE * 16);
+    int handle = opendisk(path, BLOCK_SIZE * 64);
     printf("Successful\n");
 
     char* super[BLOCK_SIZE];
@@ -37,8 +37,9 @@ int main() {
 
     int f1 = createfile(handle, 200, 0);
     deletefile(handle, f1);
-    createfile(handle, 500, 0);
+    int f2 = createfile(handle, 500, 0);
     dumpdisk(handle);
+    deletefile(handle, f2);
 
     /* CLOSE VIRTUAL DISK */
     syncdisk(handle);
