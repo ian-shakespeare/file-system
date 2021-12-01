@@ -84,7 +84,9 @@ void setbit(int n) {
     uint64_t mask = 1 << offset;
 
     /* set the bit */
+    assert(!testbit(32));
     freeblocks[index] |= mask;
+    printf("applied mask\n");
     assert(!testbit(32));
 }
 
@@ -113,6 +115,7 @@ int formatdisk(int handle) {
     for (int i = 2; i < INODES; i++) {
         clearbit(i);
     }
+    assert(testbit(0));
     writeblock(handle, 1, freeblocks);
 
     syncdisk(handle);
@@ -125,34 +128,35 @@ void dumpdisk(int handle) {
 
     int total = 0;
     printf("########### DISK DUMP ###########\n");
-    for (uint64_t i = 2; i < super[2]; i++) {
+    char inodechar[INODES];
+    for (uint64_t i = 2; i < INODES; i++) {
         if (testbit(i)) {
             printf("%ld\n", i);
             total++;
+            inodechar[i] = '#';
         }
+        else
+            inodechar[i] = '-';
     }
     printf("# magic: %lx\n# disk size: %ldkb\n# num of inodes: %ld\n# active inodes: %d\n", (uint64_t) super[0], ((int64_t) super[1]) / 1024, (int64_t) super[2], total);
+    printf("[%s]\n", inodechar);
     printf("#################################\n");
 }
 
 /* FILE INTERACTION */
 int createfile(int handle, uint64_t sz, uint64_t t) {
-	uint64_t buf[BLOCK_SIZE];
-	readblock(handle, 0, buf);
-
 	struct inode n;
 	n.size = sz;
 	n.mtime = time(NULL);
 	n.type = t;
 	uint64_t used = 0;
-	for (uint64_t i = 2; i < buf[2] && used <= (sz / BLOCK_SIZE); i++) {
+	for (uint64_t i = 2; i < INODES && used <= (sz / BLOCK_SIZE); i++) {
 		if (!testbit(i)) {
 			n.blocks[used] = i;
 			setbit(i);
 			used++;
 		}
 	}
-	printf("fsize: %ld, blocks used: %ld, location: %ld\n", sz, used, n.blocks[0]);
 
 	writeblock(handle, n.blocks[0], &n);
 	writeblock(handle, 1, freeblocks);
