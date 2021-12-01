@@ -34,12 +34,10 @@ int main() {
     handleerr(r >= 0, handle);
     printf("%s\n", buf[0]);*/
 
-    int f1 = createfile(handle, 500, 0);
-    int f2 = createfile(handle, 6000, 0);
+    int f1 = createfile(handle, 27000, 0);
     dumpdisk(handle);
+    dumpfile(handle, f1);
     deletefile(handle, f1);
-    dumpdisk(handle);
-    deletefile(handle, f2);
     dumpdisk(handle);
 
     /* CLOSE VIRTUAL DISK */

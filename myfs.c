@@ -67,10 +67,17 @@ int closedisk(int handle) {
 }
 
 /* BIT MANIPULATION */
-bool testbit(int n) {
-    uint64_t index = n / (8 * sizeof(uint64_t));
-    uint64_t offset = n % (8 * sizeof(uint64_t));
-    uint64_t mask = 1 << offset;
+bool testbit(uint64_t n) {
+    uint64_t index = n / 64;//(8 * sizeof(uint64_t));
+    uint64_t offset = n % 64;//(8 * sizeof(uint64_t));
+    uint64_t mask;
+    if (offset < 32)
+        mask = 1 << offset;
+    else {
+        mask = 1 << 31;
+        mask = mask << 1;
+        mask = mask << (offset - 32);
+    }
 
     /* test if the bit is set */
     if (freeblocks[index] & mask)
@@ -78,22 +85,33 @@ bool testbit(int n) {
     return false;
 }
 
-void setbit(int n) {
-    uint64_t index = n / (8 * sizeof(uint64_t));
-    uint64_t offset = n % (8 * sizeof(uint64_t));
-    uint64_t mask = 1 << offset;
+void setbit(uint64_t n) {
+    uint64_t index = n / 64;//(8 * sizeof(uint64_t));
+    uint64_t offset = n % 64;//(8 * sizeof(uint64_t));
+    uint64_t mask;
+    if (offset < 32)
+        mask = 1 << offset;
+    else {
+        mask = 1 << 31;
+        mask = mask << 1;
+        mask = mask << (offset - 32);
+    }
 
     /* set the bit */
-    assert(!testbit(32));
     freeblocks[index] |= mask;
-    printf("applied mask\n");
-    assert(!testbit(32));
-}
+} 
 
-void clearbit(int n) {
-    uint64_t index = n / (8 * sizeof(uint64_t));
-    uint64_t offset = n % (8 * sizeof(uint64_t));
-    uint64_t mask = 1 << offset;
+void clearbit(uint64_t n) {
+    uint64_t index = n / 64;//(8 * sizeof(uint64_t));
+    uint64_t offset = n % 64;//(8 * sizeof(uint64_t));
+    uint64_t mask;
+    if (offset < 32)
+        mask = 1 << offset;
+    else {
+        mask = 1 << 31;
+        mask = mask << 1;
+        mask = mask << (offset - 32);
+    }
 
     /* clear the bit */
     freeblocks[index] &= ~mask;
@@ -129,17 +147,16 @@ void dumpdisk(int handle) {
     int total = 0;
     printf("########### DISK DUMP ###########\n");
     char inodechar[INODES];
-    for (uint64_t i = 2; i < INODES; i++) {
+    for (uint64_t i = 0; i < INODES; i++) {
         if (testbit(i)) {
-            printf("%ld\n", i);
             total++;
-            inodechar[i] = '#';
+            inodechar[i] = '@';
         }
         else
             inodechar[i] = '-';
     }
     printf("# magic: %lx\n# disk size: %ldkb\n# num of inodes: %ld\n# active inodes: %d\n", (uint64_t) super[0], ((int64_t) super[1]) / 1024, (int64_t) super[2], total);
-    printf("[%s]\n", inodechar);
+    printf("inodes = [ %s ]\n", inodechar);
     printf("#################################\n");
 }
 
@@ -154,6 +171,7 @@ int createfile(int handle, uint64_t sz, uint64_t t) {
 		if (!testbit(i)) {
 			n.blocks[used] = i;
 			setbit(i);
+            setbit(i + INODES);
 			used++;
 		}
 	}
@@ -169,11 +187,48 @@ void deletefile(int handle, uint64_t blocknum) {
 	struct inode n;
 	readblock(handle, blocknum, &n);
 	clearbit(blocknum);
+    clearbit(blocknum + INODES);
 
     for (uint64_t i = 0; i < (n.size / BLOCK_SIZE); i++) {
-	    clearbit(n.blocks[i]);
+	    clearbit(n.blocks[i + 1]);
+        clearbit(n.blocks[i + 1] + INODES);
     }
 
     writeblock(handle, 1, freeblocks);
     syncdisk(handle);
+}
+
+void dumpfile(int handle, uint64_t blocknum) {
+    struct inode node;
+    readblock(handle, blocknum, &node);
+    printf("/////////// FILE DUMP ///////////\n");
+    printf("// size: %ld\n", node.size);
+    printf("// time: %ld\n", node.mtime);
+    if (!node.type)
+        printf("// type: regular\n");
+    else
+        printf("// type: directory\n");
+    printf("// inode location: %ld\n", node.blocks[0]);
+    printf("/////////////////////////////////\n");
+}
+
+int enlargefile(int handle, uint64_t blocknum, uint64_t sz) {
+    struct inode node;
+    readblock(handle, blocknum, &node);
+    uint64_t blocks_used = node.size / BLOCK_SIZE;
+    uint64_t blocks_needed = (node.size + sz)/ BLOCK_SIZE;
+
+    if (blocks_used == blocks_needed)
+        return -1;
+
+    uint64_t curr_used = blocks_used + 1;
+    for (uint64_t i = 2; i < INODES && curr_used <= (blocks_needed); i++) {
+		if (!testbit(i)) {
+			node.blocks[curr_used] = i;
+			setbit(i);
+            setbit(i + INODES);
+			curr_used++;
+		}
+	}
+    return blocks_needed;
 }
