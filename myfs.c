@@ -1,5 +1,7 @@
 #include "myfs.h"
 
+uint64_t freeblocks[512];
+
 void handleerr(bool b, int handle) {
     if (!b) {
         printf("ERROR! closing disk\n");
@@ -83,6 +85,7 @@ void setbit(int n) {
 
     /* set the bit */
     freeblocks[index] |= mask;
+    assert(!testbit(32));
 }
 
 void clearbit(int n) {
@@ -97,33 +100,34 @@ void clearbit(int n) {
 /* DISK FORMATTING AND DUMPING */
 int formatdisk(int handle) {
     // CREATE AND WRITE SUPER BLOCK
-    char* super[BLOCK_SIZE];
-    super[0] = (char*)0xDEADBEEF;
-    super[1] = (char*)(BLOCK_SIZE * 64);
-    super[2] = (char*)INODES;
-    writeblock(handle, 0, &super);
+    uint64_t super[BLOCK_SIZE];
+    super[0] = 0xDEADBEEF;
+    super[1] = BLOCK_SIZE * 64;
+    super[2] = INODES;
+    writeblock(handle, 0, super);
 
     // CLEAR AND WRITE THE BITMAP
+    handleerr(!testbit(32), handle);
     setbit(0);
     setbit(1);
     for (int i = 2; i < INODES; i++) {
         clearbit(i);
     }
-    writeblock(handle, 1, &freeblocks);
+    writeblock(handle, 1, freeblocks);
 
     syncdisk(handle);
     return 0;
 }
 
 void dumpdisk(int handle) {
-    char* super[BLOCK_SIZE];
-    readblock(handle, 0, &super);
+    uint64_t super[BLOCK_SIZE];
+    readblock(handle, 0, super);
 
     int total = 0;
     printf("########### DISK DUMP ###########\n");
-    for (int i = 2; i < (int64_t) super[2]; i++) {
+    for (uint64_t i = 2; i < super[2]; i++) {
         if (testbit(i)) {
-            printf("%d\n", i);
+            printf("%ld\n", i);
             total++;
         }
     }
@@ -133,25 +137,25 @@ void dumpdisk(int handle) {
 
 /* FILE INTERACTION */
 int createfile(int handle, uint64_t sz, uint64_t t) {
-	char* buf[BLOCK_SIZE];
-	readblock(handle, 0, &buf);
+	uint64_t buf[BLOCK_SIZE];
+	readblock(handle, 0, buf);
 
 	struct inode n;
 	n.size = sz;
 	n.mtime = time(NULL);
 	n.type = t;
-	int used = 0;
-	for (uint64_t i = 2; i < (uint64_t) buf[2] && used <= (sz / BLOCK_SIZE); i++) {
+	uint64_t used = 0;
+	for (uint64_t i = 2; i < buf[2] && used <= (sz / BLOCK_SIZE); i++) {
 		if (!testbit(i)) {
 			n.blocks[used] = i;
 			setbit(i);
 			used++;
 		}
 	}
-	printf("fsize: %ld, blocks used: %d, location: %ld\n", sz, used, n.blocks[0]);
+	printf("fsize: %ld, blocks used: %ld, location: %ld\n", sz, used, n.blocks[0]);
 
 	writeblock(handle, n.blocks[0], &n);
-	writeblock(handle, 1, &freeblocks);
+	writeblock(handle, 1, freeblocks);
 	syncdisk(handle);
 
 	return n.blocks[0];
@@ -162,10 +166,10 @@ void deletefile(int handle, uint64_t blocknum) {
 	readblock(handle, blocknum, &n);
 	clearbit(blocknum);
 
-    for (int i = 0; i < (n.size / BLOCK_SIZE); i++) {
+    for (uint64_t i = 0; i < (n.size / BLOCK_SIZE); i++) {
 	    clearbit(n.blocks[i]);
     }
 
-    writeblock(handle, 1, &freeblocks);
+    writeblock(handle, 1, freeblocks);
     syncdisk(handle);
 }

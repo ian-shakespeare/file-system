@@ -8,9 +8,9 @@ int main() {
     int handle = opendisk(path, BLOCK_SIZE * 64);
     printf("Successful\n");
 
-    char* super[BLOCK_SIZE];
-    readblock(handle, 0, &super);
-    if ((uint64_t) super[0] != 0xDEADBEEF) {
+    uint64_t super[BLOCK_SIZE];
+    readblock(handle, 0, super);
+    if (super[0] != 0xDEADBEEF) {
         printf("Formatting Disk...");
         formatdisk(handle);
         printf("Successful\n");
