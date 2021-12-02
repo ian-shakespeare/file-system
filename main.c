@@ -34,12 +34,25 @@ int main() {
     handleerr(r >= 0, handle);
     printf("%s\n", buf[0]);*/
 
+    printf("creating file...\n");
     int f1 = createfile(handle, 27000, 0);
     dumpdisk(handle);
     dumpfile(handle, f1);
+    printf("enlarging file...\n");
+    enlargefile(handle, f1, 4000);
+    dumpdisk(handle);
+    printf("enlarging more...\n");
+    enlargefile(handle, f1, 12000);
+    dumpdisk(handle);
+    printf("shrinking file...\n");
+    shrinkfile(handle, f1, 12000);
+    dumpdisk(handle);
+    printf("deleting...\n");
     deletefile(handle, f1);
     dumpdisk(handle);
 
+    printf("=================================\n");
+    printf("         BEGINNING TEST 2\n");
     /* CLOSE VIRTUAL DISK */
     syncdisk(handle);
     printf("=================================\nClosing Virtual Disk...");

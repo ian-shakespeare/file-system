@@ -218,17 +218,61 @@ int enlargefile(int handle, uint64_t blocknum, uint64_t sz) {
     uint64_t blocks_used = node.size / BLOCK_SIZE;
     uint64_t blocks_needed = (node.size + sz)/ BLOCK_SIZE;
 
-    if (blocks_used == blocks_needed)
-        return -1;
+    if (blocks_used == blocks_needed) {
+	    node.size += sz;
+	    writeblock(handle, blocknum, &node);
+        return node.size;
+    }
 
     uint64_t curr_used = blocks_used + 1;
     for (uint64_t i = 2; i < INODES && curr_used <= (blocks_needed); i++) {
 		if (!testbit(i)) {
 			node.blocks[curr_used] = i;
 			setbit(i);
-            setbit(i + INODES);
+			setbit(i + INODES);
 			curr_used++;
 		}
 	}
-    return blocks_needed;
+    node.size += sz;
+    writeblock(handle, blocknum, &node);
+    return node.size;
+}
+
+int shrinkfile(int handle, uint64_t blocknum, uint64_t sz) {
+	struct inode node;
+	readblock(handle, blocknum, &node);
+	uint64_t blocks_used = node.size / BLOCK_SIZE;
+	uint64_t blocks_needed = (node.size - sz)/ BLOCK_SIZE;
+
+	handleerr(sz < node.size, handle);
+
+	if (blocks_used == blocks_needed) {
+		node.size -= sz;
+		writeblock(handle, blocknum, &node);
+		return node.size;
+	}
+
+	for (uint64_t i = blocks_used; i > blocks_needed; i--) {
+		clearbit(node.blocks[i]);
+		clearbit(node.blocks[i] + INODES);
+	}
+	node.size -= sz;
+	writeblock(handle, blocknum, &node);
+	return node.size;
+}
+
+int writefile(int handle, uint64_t, blocknum, void *buffer) {
+	handleerr(testbit(blocknum), handle);
+
+	struct inode node;
+	readblock(handle, blocknum, &node);
+
+	if ((node.size / BLOCK_SIZE) >= ((node.size + sizeof(buffer)) / BLOCK SIZE)) {
+		writeblock(handle, blocknum + INODES, buffer);
+		syncdisk(handle);
+		return sizeof(buffer);
+	}
+	else {
+		enlargefile(handle, blocknum, sizeof(buffer) / node.size);
+	}
 }

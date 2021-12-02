@@ -34,3 +34,4 @@ int createfile(int handle, uint64_t sz, uint64_t t);
 void deletefile(int handle, uint64_t blocknum);
 void dumpfile(int handle, uint64_t blocknum);
 int enlargefile(int handle, uint64_t blocknum, uint64_t sz);
+int shrinkfile(int handle, uint64_t blocknum, uint64_t sz);
