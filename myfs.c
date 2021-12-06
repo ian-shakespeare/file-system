@@ -99,7 +99,7 @@ void setbit(uint64_t n) {
 
     /* set the bit */
     freeblocks[index] |= mask;
-} 
+}
 
 void clearbit(uint64_t n) {
     uint64_t index = n / 64;//(8 * sizeof(uint64_t));
@@ -321,3 +321,26 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
     return 0;
 }
 */
+int createdirectory(int handle, uint64_t sz) {
+//   A directory is a special file that contains a mapping of file names to inode numbers.
+//   You may restrict it to an arbitrary maximum size (such as a single block)
+//   to simplify implementation.
+//   A simple list like this should suffice:
+//     - 1st inode (8 bytes), file name (actual length plus terminating null)
+//     - 2nd inode (8 bytes), file name (actual length plus terminating null)
+//     - …
+//  This adds a total overhead of 9 bytes per file name.
+//  If you pad the lengths to ensure that inode numbers are word aligned,
+//  the potential overhead is 16 bytes per entry.
+//
+//  A function to “unpack” the data structure into an array of string/inode pairs may be useful,
+//  along with a function to “pack” an array of string/inode pairs into the on-disk format.
+//  An array of strings is much like argv,
+//  except each entry has two elements of data instead of one (a struct would be useful here).
+    createfile(handle, sz, 1);
+    return 0;
+}
+
+void deletedirectory(int handle, uint64_t blocknum) {
+
+}
