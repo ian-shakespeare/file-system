@@ -271,28 +271,44 @@ int shrinkfile(int handle, uint64_t blocknum, uint64_t sz) // sz is the amount y
 	return node.size;
 }
 
-/*int writefile(int handle, uint64_t blocknum, void *buffer) {
+int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
 	handleerr(testbit(blocknum), handle);
 
 	struct inode node;
 	readblock(handle, blocknum, &node);
 
-    uint64_t bl[BLOCK_SIZE];
+    uint8_t bl[BLOCK_SIZE];
 
-	if ((node.size / BLOCK_SIZE) >= sizeof(buffer)) {
+	if ((node.size / BLOCK_SIZE) >= sz) {
 		writeblock(handle, blocknum + INODES, buffer);
 		syncdisk(handle);
-		return sizeof(buffer);
 	}
-	else if (sizeof(buffer) < node.size) {
+	else if (sz <= node.size) {
+        int curr_block = 0;
+        for (uint64_t i = 0; i < sz; i++) {
+            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
+            if (i % 4095 == 0) {
+                writeblock(handle, node.blocks[curr_block] + INODES, bl);
+                curr_block++;
+            }
+        }
 	}
     else {
+        enlargefile(handle, blocknum, (sz - node.size));
+        int curr_block = 0;
+        for (uint64_t i = 0; i < sz; i++) {
+            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
+            if (i % 4095 == 0) {
+                writeblock(handle, node.blocks[curr_block] + INODES, bl);
+                curr_block++;
+            }
+        }
     }
-
-    return 0;
+    syncdisk(handle);
+    return sz;
 }
 
-int readfile(int handle, uint64_t blocknum, void *buffer) {
+/*int readfile(int handle, uint64_t blocknum, void *buffer) {
     handleerr(testbit(blocknum), handle);
 
     struct inode node;
