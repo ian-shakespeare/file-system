@@ -56,6 +56,8 @@ int main() {
 
     printf("creating file...\n");
     int f2 = createfile(handle, 200, 0);
+    dumpdisk(handle);
+    dumpfile(handle, f2);
     char* word = "Hello!\n";
     printf("writing file...\n");
     writefile(handle, f2, word, 8);

@@ -145,19 +145,19 @@ void dumpdisk(int handle) {
     readblock(handle, 0, super);
 
     int total = 0;
-    printf("########### DISK DUMP ###########\n");
+    printf("@@@@@@@@@@@ DISK DUMP @@@@@@@@@@@\n");
     char inodechar[INODES];
     for (uint64_t i = 0; i < INODES; i++) {
         if (testbit(i)) {
             total++;
-            inodechar[i] = '@';
+            inodechar[i] = '#';
         }
         else
-            inodechar[i] = '-';
+            inodechar[i] = '.';
     }
     printf("# magic: %lx\n# disk size: %ldkb\n# num of inodes: %ld\n# active inodes: %d\n", (uint64_t) super[0], ((int64_t) super[1]) / 1024, (int64_t) super[2], total);
     printf("inodes = [ %s ]\n", inodechar);
-    printf("#################################\n");
+    printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 }
 
 /* FILE INTERACTION */
@@ -279,7 +279,7 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
 
     uint8_t bl[BLOCK_SIZE];
 
-	if ((node.size / BLOCK_SIZE) >= sz) {
+	if ((node.size / BLOCK_SIZE) == 0 && sz <= node.size) {
 		writeblock(handle, blocknum + INODES, buffer);
 	}
 	else if (sz <= node.size) {
@@ -314,11 +314,9 @@ int readfile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
     readblock(handle, blocknum, &node);
 
     uint8_t bl[BLOCK_SIZE];
-    printf("first read\n");
     int curr_block = 0;
     for (uint64_t i = 0; i < sz; i++) {
         if (i % (BLOCK_SIZE - 1) == 0) {
-		printf("secondary read\n");
             readblock(handle, node.blocks[curr_block] + INODES, bl);
             curr_block++;
         }
