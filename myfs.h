@@ -35,6 +35,9 @@ void deletefile(int handle, uint64_t blocknum);
 void dumpfile(int handle, uint64_t blocknum);
 int enlargefile(int handle, uint64_t blocknum, uint64_t sz);
 int shrinkfile(int handle, uint64_t blocknum, uint64_t sz);
+int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz);
+int readfile(int handle, uint64_t blocknum, void *buffer, uint64_t sz);
+/*
 int createdirectory(int handle, uint64_t sz);
 void deletedirectory(int handle, uint64_t blocknum);
 int createdirectoryentry(int handle, uint64_t blocknum);
@@ -43,3 +46,4 @@ void listdirectoryfiles(int handle, uint64_t blocknum);
 int findfileindirectory(int handle, uint64_t blocknum, char* filename);
 void removedirectoryentry(int handle, uint64_t dirblocknum, uint64_t fileblocknum);
 int hierarchicalsearch(int handle);
+*/

@@ -53,6 +53,18 @@ int main() {
 
     printf("=================================\n");
     printf("         BEGINNING TEST 2\n");
+
+    printf("creating file...\n");
+    int f2 = createfile(handle, 200, 0);
+    char* word = "Hello!\n";
+    printf("writing file...\n");
+    writefile(handle, f2, word, 8);
+    char newword[8];
+    printf("reading file...\n");
+    readfile(handle, f2, newword, 8);
+    printf("%s\n", newword);
+    deletefile(handle, f2);
+
     /* CLOSE VIRTUAL DISK */
     syncdisk(handle);
     printf("=================================\nClosing Virtual Disk...");

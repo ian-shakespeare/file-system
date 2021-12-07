@@ -287,7 +287,7 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
         int curr_block = 0;
         for (uint64_t i = 0; i < sz; i++) {
             bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
-            if (i % 4095 == 0) {
+            if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
                 writeblock(handle, node.blocks[curr_block] + INODES, bl);
                 curr_block++;
             }
@@ -298,7 +298,7 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
         int curr_block = 0;
         for (uint64_t i = 0; i < sz; i++) {
             bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
-            if (i % 4095 == 0) {
+            if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
                 writeblock(handle, node.blocks[curr_block] + INODES, bl);
                 curr_block++;
             }
@@ -308,19 +308,27 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
     return sz;
 }
 
-/*int readfile(int handle, uint64_t blocknum, void *buffer) {
+int readfile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
     handleerr(testbit(blocknum), handle);
 
     struct inode node;
     readblock(handle, blocknum, &node);
 
-    for (uint64_t i = 0; i < node.size / BLOCK_SIZE; i++) {
-        readblock(handle, node.blocks[0] + INODES, buffer + (i * BLOCK_SIZE));
+    uint8_t bl[BLOCK_SIZE];
+    readblock(handle, node.blocks[0] + INODES, bl);
+    int curr_block = 1; // This is 1 because we already read the 0th block
+    for (uint64_t i = 0; i < sz; i++) {
+        ((uint8_t*)buffer)[i] = bl[i % BLOCK_SIZE];
+        if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
+            readblock(handle, node.blocks[curr_block] + INODES, bl);
+            curr_block++;
+        }
     }
 
-    return 0;
+    return sz;
 }
-*/
+
+/*
 int createdirectory(int handle, uint64_t sz) {
 //   A directory is a special file that contains a mapping of file names to inode numbers.
 //   You may restrict it to an arbitrary maximum size (such as a single block)
@@ -344,3 +352,4 @@ int createdirectory(int handle, uint64_t sz) {
 void deletedirectory(int handle, uint64_t blocknum) {
 
 }
+*/
