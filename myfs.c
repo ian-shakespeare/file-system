@@ -281,27 +281,26 @@ int writefile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
 
 	if ((node.size / BLOCK_SIZE) >= sz) {
 		writeblock(handle, blocknum + INODES, buffer);
-		syncdisk(handle);
 	}
 	else if (sz <= node.size) {
         int curr_block = 0;
         for (uint64_t i = 0; i < sz; i++) {
-            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
-            if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
+            if (i % (BLOCK_SIZE - 1) == 0) {
                 writeblock(handle, node.blocks[curr_block] + INODES, bl);
                 curr_block++;
             }
+            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
         }
 	}
     else {
         enlargefile(handle, blocknum, (sz - node.size));
         int curr_block = 0;
         for (uint64_t i = 0; i < sz; i++) {
-            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
-            if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
+            if (i % (BLOCK_SIZE - 1) == 0) {
                 writeblock(handle, node.blocks[curr_block] + INODES, bl);
                 curr_block++;
             }
+            bl[i % BLOCK_SIZE] = ((uint8_t*) buffer)[i];
         }
     }
     syncdisk(handle);
@@ -315,14 +314,15 @@ int readfile(int handle, uint64_t blocknum, void *buffer, uint64_t sz) {
     readblock(handle, blocknum, &node);
 
     uint8_t bl[BLOCK_SIZE];
-    readblock(handle, node.blocks[0] + INODES, bl);
-    int curr_block = 1; // This is 1 because we already read the 0th block
+    printf("first read\n");
+    int curr_block = 0;
     for (uint64_t i = 0; i < sz; i++) {
-        ((uint8_t*)buffer)[i] = bl[i % BLOCK_SIZE];
-        if (i != 0 && i % (BLOCK_SIZE - 1) == 0) {
+        if (i % (BLOCK_SIZE - 1) == 0) {
+		printf("secondary read\n");
             readblock(handle, node.blocks[curr_block] + INODES, bl);
             curr_block++;
         }
+        ((uint8_t*)buffer)[i] = bl[i % BLOCK_SIZE];
     }
 
     return sz;

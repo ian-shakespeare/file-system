@@ -61,7 +61,7 @@ int main() {
     writefile(handle, f2, word, 8);
     char newword[8];
     printf("reading file...\n");
-    readfile(handle, f2, newword, 8);
+    readfile(handle, f2, &newword, 8);
     printf("%s\n", newword);
     deletefile(handle, f2);
 
